@@ -14,4 +14,5 @@ Para acompanhar este curso, você também deve ter conhecimentos básicos sobre 
 
 ### [1) Introdução ao Next.js - O Framework React para a Web](/next-01-introducao)
 ### [2) Componentes em React, suas Propriedades e Estado](/next-02-props-state)
-### [3) EM CONSTRUÇÃO](/)
+### [3) Ciclo de Vida de um Componente React](/next-03-ciclo-de-vida)
+### [4) EM CONSTRUÇÃO](/)
