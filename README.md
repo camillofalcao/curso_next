@@ -16,3 +16,4 @@ Para acompanhar este curso, você também deve ter conhecimentos básicos sobre 
 ### [2) Componentes em React, suas Propriedades e Estado](/next-02-props-state)
 ### [3) Ciclo de Vida de um Componente React](/next-03-ciclo-de-vida)
 ### [4) Trabalhando com Context](/next-04-context)
+### [5) Roteamento, Navegação e Layouts](/next-05-roteamento)
