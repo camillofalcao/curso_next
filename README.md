@@ -17,3 +17,6 @@ Para acompanhar este curso, você também deve ter conhecimentos básicos sobre 
 ### [3) Ciclo de Vida de um Componente React](/next-03-ciclo-de-vida)
 ### [4) Trabalhando com Context](/next-04-context)
 ### [5) Roteamento, Navegação e Layouts](/next-05-roteamento)
+### [6) Consumindo API's - Exemplo de CRUD](/next-06-consumindo-apis/)
+### [7) Exemplo de CRUD Completo (Front-end + Back-end com Banco de Dados)](/next-07-crud-completo-com-bd/)
+
