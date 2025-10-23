@@ -937,4 +937,3 @@ const response = await fetch('/api/restrict/produtos', {
 ```
 
 Finalmente você pode testar entrar nas páginas logadas sem efetuar o *login* para que seja redirecionado para a página de *login*. Pode fazer *login* e logoout, inclusive pelo seu usuário do GitHub. Pode acessar a página que não exige *login* estando e não estando logado para verificar o comportamento da *server action*.
-
