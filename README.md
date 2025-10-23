@@ -10,6 +10,9 @@ Para acompanhar este curso, você também deve ter conhecimentos básicos sobre 
 
 [Curso de Introdução ao Desenvolvimento Web](https://github.com/camillofalcao/curso-intro-web)
 
+Você também precisa ter conhecimentos básicos da linguagem Typescript, que você pode obter no seguinte repositório: [Curso de Introdução ao Typescript](https://github.com/camillofalcao/curso-ts)
+
+
 ## Conteúdo:
 
 ### [1) Introdução ao Next.js - O Framework React para a Web](/next-01-introducao)
