@@ -509,11 +509,11 @@ No arquivo acima temos um *endpoint* para *login* que recebe um *JSON* contendo 
 
 Geralmente *tokens* JWT possuem validade curta e novos *tokens* são obtidos através de *refresh tokens*, porém este conteúdo está fora do escopo deste tutorial.
 
-Agora vamos criar o *middleware* que irá interceptar as requisições aos nossos componentes e serviços, não permitindo o acesso a conteúdo restrito por usuários não autenticados. Para isso, vamos criar o seguinte padrão: pages, actions e *endpoints* que necessitam de autenticação serão colocados dentro de uma pasta chamada `restrito`. Dessa forma, vamos criar as pastas:
+Agora vamos criar o *middleware* que irá interceptar as requisições aos nossos componentes e serviços, não permitindo o acesso a conteúdo restrito por usuários não autenticados. Para isso, vamos criar o seguinte padrão: pages, actions e *endpoints* que necessitam de autenticação serão colocados dentro de uma pasta chamada `restrict`. Dessa forma, vamos criar as pastas:
 
-- `/src/app/actions/restrito`
-- `/src/app/api/restrito`
-- `/src/app/pages/restrito`
+- `/src/app/actions/restrict`
+- `/src/app/api/restrict`
+- `/src/app/pages/restrict`
 
 Agora vamos criar o nosso *middleware*:
 
@@ -575,7 +575,7 @@ Uma informação importante: infelizmente, não conseguimos interceptar via *mid
 
 Vamos criar a nossa primeira *server action* restrita, porém a mesma não funcionará da forma que queremos ainda. Ao término deste tutorial, isso será resolvido.
 
-`/src/app/actions/obterData.ts`:
+`/src/app/actions/restrict/obterData.ts`:
 ```ts
 'use server'
 
@@ -590,7 +590,7 @@ Nosso próximo passo será criar as páginas restritas.
 
 Vamos iniciar criando o layout que vai fornecer o componente provedor de sessão, que permitirá que nossa página restrita leia as informações do usuário autenticado:
 
-`/src/app/pages/layout.tsx`:
+`/src/app/pages/restrict/layout.tsx`:
 ```ts
 "use client";
 
@@ -693,7 +693,46 @@ Agora vamos criar a nossa primeira página que não exige que o usuário esteja 
 
 `/src/app/pages/teste2/page.tsx`:
 ```ts
+'use client'
 
+import { useState, useEffect } from "react";
+import obterData from "@/app/actions/restrict/obterData";
+import Link from "next/link";
+
+export default function Page() {
+  const [horaServidor, setHoraServidor] = useState<Date | null>(null);
+
+  useEffect(() => {
+    obterData().then((data) => {
+      setHoraServidor(data);
+    });
+  }, []);
+
+  const msgHoraServidor = horaServidor ? (
+        <p className="text-blue-500 mb-5">
+          Data e hora do servidor: {horaServidor?.toDateString()} {horaServidor?.toLocaleTimeString()} (informação obtida em action que impõe autenticação)
+        </p>) : 
+        (<p className="text-red-500 mb-5">
+          Data e hora do servidor: é preciso estar autenticado para acessar esta função
+        </p>);
+
+  return (
+    <main className="max-w-4xl mx-auto mt-10 px-6">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-2xl font-semibold text-red-700 mb-2">
+            Página de Teste 1 - Área NÃO Autenticada
+          </h2>
+          <p className="text-gray-600 mb-5">
+            Esta é uma área pública. Você não precisa estar logado para visualizar esta página.
+          </p>
+          {msgHoraServidor}
+          <Link href="/" className="w-100 py-2 px-5 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-700 transition-colors disabled:opacity-60">
+            Voltar
+          </Link>
+        </div>
+      </main>
+  );
+}
 ```
 
 Rode a aplicação, acesse `URL base/pages/teste2` e note que a *server action* `obterData` pôde ser acessada pela página mesmo por usuário não autenticado. Vamos resolver isso agora.
@@ -726,7 +765,7 @@ Vamos chamar esta função dentro da nossa *server action* `obterData`:
 ```ts
 'use server'
 
-import { requireUser } from './requireUser';
+import { requireUser } from '../requireUser';
 
 export default async function obterData(): Promise<Date> {
   await requireUser();
