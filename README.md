@@ -22,7 +22,6 @@ Você também precisa ter conhecimentos básicos da linguagem Typescript, que vo
 ### [5) Roteamento, Navegação e Layouts](/next-05-roteamento)
 ### [6) Consumindo API's - Exemplo de CRUD](/next-06-consumindo-apis/)
 ### [7) Exemplo de CRUD Completo (Front-end + Back-end com Banco de Dados)](/next-07-crud-completo-com-bd/)
-
 ### [8) Criando API's](/next-08-apis)
-
 ### [9) Autenticação e Autorização](/next-09-auth)
+### [10) Deploy na Vercel](/next-10-deploy)
