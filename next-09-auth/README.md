@@ -44,6 +44,8 @@ npm install next-auth@4
 
 Na época da criação deste tutorial, o Next 16 já havia sido lançado, só que a versão padrão para o Next-Auth não era compatível com o Next 16. Por este motivo que optei por indicar as versões a serem instaladas para este tutorial. Fique à vontade para retirar as versões após os comandos de instalação (a versão é indicada pelo @ seguido de um número) e testar a compatibilidade. Se não for compatível, siga com as versões indicadas neste tutorial.
 
+Neste tutorial nós vamos acessar variáveis de ambiente e, para que o compilador Typescript não apresente nenhuma mensagem de erro ao fazermos isso, Execute o comando `npm i --save-dev @types/node` e adicione a linha `"types": ["node"]` dentro de `compilerOptions` no arquivo `tsconfig.json`.
+
 Para realizar a autorização do usuário, vamos adicionar ao objeto User, definido pelo Next-Auth a propriedade `role`, que nos permitirá identificar o tipo de usuário que estamos lidando, o que pode ser utilizado para conceder ou não autorização para o mesmo executar a ação. Para isso, crie o seguinte arquivo:
 
 `/src/types/next-auth.d.ts`:
