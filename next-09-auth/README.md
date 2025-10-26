@@ -160,7 +160,7 @@ const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
 ```
 
-No arquivo `authOptions.ts`, criamos um objeto `OPTIONS` do tipo NextAuthOptions. Este objeto contém as informações que o Next-Auth necessita para gerar os *endpoints*, o que é feito passando `OPTIONS` (importado como `authOptions) por parâmetro para a função `NextAuth`, no arquivo `route.ts`. Por fim, exportamos como um método GET e outro método POST.
+No arquivo `authOptions.ts`, criamos um objeto `OPTIONS` do tipo NextAuthOptions. Este objeto contém as informações que o Next-Auth necessita para gerar os *endpoints*, o que é feito passando `OPTIONS` (importado como `authOptions`) por parâmetro para a função `NextAuth`, no arquivo `route.ts`. Por fim, exportamos como um método GET e outro método POST.
 
 
 `/src/app/api/auth/[...nextauth]/authOptions.ts`:
@@ -211,7 +211,7 @@ Authorization callback URL: http://localhost:3000
 6. Copie o **Client ID** e cole-o após o igual da variável `GITHUB_ID` do arquivo `.env` do nosso projeto.
 7. Clique em `<Generate a new client secret>` e copie o *client secret* e cole-o como valor da variável `GITHUB_SECRET` do `.env`.
 
-Agora que já temos tudo o que necessitamos para adicionar o nosso provider, vamos fazê-lo. No arquivo `/src/app/api/auth/[...nextauth]/route.ts`, importe o GitHubProvider (`import GitHubProvider from "next-auth/providers/github";`) e adicione o objeto abaixo no array de providers.
+Agora que já temos tudo o que necessitamos para adicionar o nosso provider, vamos fazê-lo. No arquivo `/src/app/api/auth/[...nextauth]/authOptions.ts`, importe o GitHubProvider (`import GitHubProvider from "next-auth/providers/github";`) e adicione o objeto abaixo no array de providers.
 
 `/src/app/api/auth/[...nextauth]/authOptions.ts`:
 ```ts
@@ -388,7 +388,7 @@ function InternalPage () {
     setLoading(true);
 
     const result = await signIn("credentials", {
-      redirect: false,
+      redirect: true,
       email,
       password,
       callbackUrl,

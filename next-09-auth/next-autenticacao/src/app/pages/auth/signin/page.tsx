@@ -20,7 +20,7 @@ function InternalPage () {
     setLoading(true);
 
     const result = await signIn("credentials", {
-      redirect: false,
+      redirect: true,
       email,
       password,
       callbackUrl,
