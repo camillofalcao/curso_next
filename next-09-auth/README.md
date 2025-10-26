@@ -48,7 +48,7 @@ Para realizar a autorização do usuário, vamos adicionar ao objeto User, defin
 
 `/src/types/next-auth.d.ts`:
 ```ts
-import NextAuth, { DefaultSession } from "next-auth";
+import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
@@ -87,7 +87,7 @@ export async function userLogin(email: string, senha: string): Promise<User | nu
     return Promise.resolve(null);
   }
 
-  let usuario = usuarios.find(x => email === x.email && senha === x?.password);
+  const usuario = usuarios.find(x => email === x.email && senha === x?.password);
 
   if (usuario) {
     return Promise.resolve({ id: usuario.id, name: usuario.name, email: usuario.email, role: usuario.role });
@@ -101,7 +101,7 @@ export async function getUser(email: string): Promise<User | null> {
     return Promise.resolve(null);
   }
 
-  let usuario = usuarios.find(x => email === x.email);
+  const usuario = usuarios.find(x => email === x.email);
 
   if (usuario) {
     return Promise.resolve({ id: usuario.id, name: usuario.name, email: usuario.email, role: usuario.role });
@@ -118,7 +118,7 @@ export async function userAdd(name: string, email: string, role: string) : Promi
   return Promise.resolve({ id: usuario.id, name: usuario.name, email: usuario.email, role: usuario.role });
 }
 
-let usuarios = [
+const usuarios = [
   { id: "1", name: "Usuário Admin", password: '123456', email: "admin@email.com", role: "admin" },
   { id: "2", name: "Usuário Teste", password: '123456', email: "teste@email.com", role: "user" },
 ]
@@ -130,30 +130,40 @@ Note que armazenamos a senha dos usuários à descoberto. Você nunca deve fazer
 
 Vamos continuar a nossa aplicação criando os *endpoints* utilizados no *login* pelo NextAuth:
 
-`/src/app/api/auth/[...nextauth]/route.ts`:
+`/src/app/api/auth/[...nextauth]/authOptions.ts`:
 ```ts
-import NextAuth, { NextAuthOptions, User } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 
-export const OPTIONS: NextAuthOptions = {
+const OPTIONS: NextAuthOptions = {
   providers: [
     
   ],
   session: {
     strategy: "jwt",
-  },  
+  },
 };
 
-const handler = NextAuth(OPTIONS);
+export default OPTIONS;
+```
+
+Abaixo de `providers`, temos o objeto `session`, que define que utilizaremos JWT (*Jason Web Tokens*) como estratégia de autenticação.
+
+No array `providers`, note que não fornecemos nada neste array. Antes de preenchê-lo, adicione as importações abaixo:
+
+`/src/app/api/auth/[...nextauth]/route.ts`:
+```ts
+import NextAuth from "next-auth";
+import authOptions from '@/app/api/auth/[...nextauth]/authOptions';
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
 ```
 
-Acima, criamos um objeto `OPTIONS` do tipo NextAuthOptions. Este objeto contém as informações que o Next-Auth necessita para gerar os *endpoints*, o que é feito passando `OPTIONS` por parâmetro para a função `NextAuth`. Por fim, exportamos como um método GET e outro método POST.
+No arquivo `authOptions.ts`, criamos um objeto `OPTIONS` do tipo NextAuthOptions. Este objeto contém as informações que o Next-Auth necessita para gerar os *endpoints*, o que é feito passando `OPTIONS` (importado como `authOptions) por parâmetro para a função `NextAuth`, no arquivo `route.ts`. Por fim, exportamos como um método GET e outro método POST.
 
-Abaixo de `providers`, temos o objeto `session`, que define que utilizaremos JWT (*Jason Web Tokens*) como estratégia de autenticação.
 
-Voltando ao array `providers`, note que não fornecemos nada neste array. Antes de preenchê-lo, adicione as importações abaixo:
-
+`/src/app/api/auth/[...nextauth]/authOptions.ts`:
 ```ts
 import CredentialsProvider from "next-auth/providers/credentials";
 import {userLogin, getUser, userAdd} from "@/app/actions/user-login";
@@ -186,7 +196,7 @@ GITHUB_ID=
 GITHUB_SECRET=
 ```
 
-Adicione uma string grande como segredo na veriável `NEXTAUTH_SECRET` acima. Para isso, sugiro que pesquise no Google por "Gerador Guid online", entre em um dos resultados da sua busca, gere um GUID e copie-o. Um número grande deve ser gerado. Substitua o número que deixei na variável `NEXTAUTH_SECRET` pelo número que você gerou. Este número será utilizado para assinar o *token* de autenticação.
+Adicione uma *string* grande como segredo na veriável `NEXTAUTH_SECRET` acima. Para isso, sugiro que pesquise no Google por "Gerador Guid online", entre em um dos resultados da sua busca, gere um GUID e copie-o. Um número grande deve ser gerado. Substitua o número que deixei na variável `NEXTAUTH_SECRET` pelo número que você gerou. Este número será utilizado para assinar o *token* de autenticação.
 
 Já para o *login* com o GitHub, precisamos preencher os valores `GITHUB_ID` e `GITHUB_SECRET`, faça *login* em sua conta GitHub e siga os passos abaixo
 
@@ -203,6 +213,7 @@ Authorization callback URL: http://localhost:3000
 
 Agora que já temos tudo o que necessitamos para adicionar o nosso provider, vamos fazê-lo. No arquivo `/src/app/api/auth/[...nextauth]/route.ts`, importe o GitHubProvider (`import GitHubProvider from "next-auth/providers/github";`) e adicione o objeto abaixo no array de providers.
 
+`/src/app/api/auth/[...nextauth]/authOptions.ts`:
 ```ts
     GitHubProvider({
       clientId: process.env.GITHUB_ID ?? "",
@@ -231,24 +242,29 @@ Passamos os valores das variáveis de ambiente `GITHUB_ID` e `GITHUB_SECRET` par
 
 Faça a importação do JWT (`import { JWT } from "next-auth/jwt";`) do Next-Auth. Agora, abaixo do objeto `session` e dentro do objeto `OPTIONS`, vamos adicionar funções de callback para preencher os *tokens* JWT e de sessão com a *role* e o *id*  do usuário:
 
+`/src/app/api/auth/[...nextauth]/authOptions.ts`:
 ```ts
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: User | null }) {
+    async jwt({ token, user }: { token: TokenCustom; user?: User | null }) {
       // Adiciona informações do usuário autenticado no token
       if (user) {
-        (token as any).id = (user as any).id ?? token.sub;
-        token.role = user.role;
+        // user may not have a typed id/role in the User type, so narrow via unknown
+        const u = user as unknown as { id?: string; role?: string };
+        token.id = u.id ?? token.sub;
+        token.role = u.role;
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: JWT }) {
+    async session({ session, token }: { session: Session; token: TokenCustom }) {
       // Sessão devolvida via /api/auth/session
       session.user = session.user || {};
-      (session.user as any).id = (token as any).id;
+      const su = session.user as unknown as { id?: string; role?: string };
+      su.id = token.id;
       if (token?.role) {
-        // Adiciona a role do token JWT token no objeto session
-        session.user.role = token.role;
+        su.role = token.role;
       }
+      // ensure session.user remains available to callers
+      (session as unknown as { user: typeof su }).user = su;
       return session;
     },
   },
@@ -264,15 +280,20 @@ Finalmente, vamos adicionar também o endereço para uma página personalidade d
 
 O arquivo completo se encontra abaixo:
 
-`/src/app/api/auth/[...nextauth]/route.ts`:
+`/src/app/api/auth/[...nextauth]/authOptions.ts`:
 ```ts
-import NextAuth, { NextAuthOptions, User } from "next-auth";
+import { NextAuthOptions, User, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
-import {userLogin, getUser, userAdd} from "@/app/actions/user-login";
+import { userLogin, getUser, userAdd } from "@/app/actions/user-login";
 import { JWT } from "next-auth/jwt";
 
-export const OPTIONS: NextAuthOptions = {
+interface TokenCustom extends JWT {
+  id?: string;
+  role?: string;
+}
+
+const OPTIONS: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -281,6 +302,7 @@ export const OPTIONS: NextAuthOptions = {
         password: { label: "Senha", type: "password" },
       },
       async authorize(credentials, req) {
+        console.log(req); // objeto contendo informações da requisição
         return userLogin(credentials?.email ?? "", credentials?.password ?? "");
       },
     }),
@@ -290,8 +312,9 @@ export const OPTIONS: NextAuthOptions = {
       async profile(profile) {
         let usr = await getUser(profile.email);
 
-        if (!usr) { //Novo usuário logado com o GitHub deve ser persistido
-          usr = await userAdd(profile.name || profile.login, profile.email, 'user');
+        if (!usr) {
+          // Novo usuário logado com o GitHub deve ser persistido
+          usr = await userAdd(profile.name || profile.login, profile.email, "user");
         }
 
         return {
@@ -308,46 +331,48 @@ export const OPTIONS: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: User | null }) {
+    async jwt({ token, user }: { token: TokenCustom; user?: User | null }) {
       // Adiciona informações do usuário autenticado no token
       if (user) {
-        (token as any).id = (user as any).id ?? token.sub;
-        token.role = user.role;
+        // user may not have a typed id/role in the User type, so narrow via unknown
+        const u = user as unknown as { id?: string; role?: string };
+        token.id = u.id ?? token.sub;
+        token.role = u.role;
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: JWT }) {
+    async session({ session, token }: { session: Session; token: TokenCustom }) {
       // Sessão devolvida via /api/auth/session
       session.user = session.user || {};
-      (session.user as any).id = (token as any).id;
+      const su = session.user as unknown as { id?: string; role?: string };
+      su.id = token.id;
       if (token?.role) {
-        // Adiciona a role do token JWT token no objeto session
-        session.user.role = token.role;
+        su.role = token.role;
       }
+      // ensure session.user remains available to callers
+      (session as unknown as { user: typeof su }).user = su;
       return session;
     },
   },
   pages: {
     signIn: "/auth/signin", // Página de login customizada
-  },  
+  },
 };
 
-const handler = NextAuth(OPTIONS);
-
-export { handler as GET, handler as POST };
+export default OPTIONS;
 ```
 
 Vamos criar agora a nossa página customizada de *login*:
 
 `/src/app/pages/auth/signin/page.tsx`
 ```ts
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-export default function SignInPage() {
+function InternalPage () {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get("callbackUrl") ?? "/";
@@ -450,10 +475,19 @@ export default function SignInPage() {
         </div>
 
         <p className="mt-4 text-xs text-gray-600">
-          Dica didática: este formulário usa o provider "credentials" do next-auth. Para testar um app externo (mobile), você pode chamar o endpoint <code className="bg-gray-100 px-1 py-0.5 rounded">/api/auth/login</code> para receber um token.
+          Dica didática: este formulário usa o provider &quot;credentials&quot; do next-auth. Para testar um app externo (mobile), você pode chamar o endpoint <code className="bg-gray-100 px-1 py-0.5 rounded">/api/auth/login</code> para receber um token.
         </p>
       </div>
     </main>
+  );
+} 
+
+//O código que usa useSearchParams precisa estar dentro de um componente Suspense
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <InternalPage />
+    </Suspense>
   );
 }
 ```
@@ -653,7 +687,7 @@ Abaixo temos a nossa próxima página:
 ```ts
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
-import { OPTIONS as authOptions } from '@/app/api/auth/[...nextauth]/route';
+import authOptions from '@/app/api/auth/[...nextauth]/authOptions';
 
 export default async function Page() {
   const session = await getServerSession(authOptions);
@@ -744,14 +778,14 @@ Crie o arquivo abaixo:
 'use server'
 
 import { getServerSession } from 'next-auth/next';
-import { OPTIONS as authOptions } from '@/app/api/auth/[...nextauth]/route';
+import authOptions from '@/app/api/auth/[...nextauth]/authOptions';
+import { unauthorized } from 'next/navigation';
 
 export async function requireUser() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
-    const err: any = new Error('Unauthorized');
-    err.status = 401;
-    throw err;
+    //Lança o erro 401 - Unauthorized
+    unauthorized();
   }
   return session.user;
 }

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 
-export default function SignInPage() {
+function InternalPage () {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get("callbackUrl") ?? "/";
@@ -107,9 +107,18 @@ export default function SignInPage() {
         </div>
 
         <p className="mt-4 text-xs text-gray-600">
-          Dica didática: este formulário usa o provider "credentials" do next-auth. Para testar um app externo (mobile), você pode chamar o endpoint <code className="bg-gray-100 px-1 py-0.5 rounded">/api/auth/login</code> para receber um token.
+          Dica didática: este formulário usa o provider &quot;credentials&quot; do next-auth. Para testar um app externo (mobile), você pode chamar o endpoint <code className="bg-gray-100 px-1 py-0.5 rounded">/api/auth/login</code> para receber um token.
         </p>
       </div>
     </main>
+  );
+} 
+
+//O código que usa useSearchParams precisa estar dentro de um componente Suspense
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <InternalPage />
+    </Suspense>
   );
 }

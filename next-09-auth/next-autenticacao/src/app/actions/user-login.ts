@@ -7,7 +7,7 @@ export async function userLogin(email: string, senha: string): Promise<User | nu
     return Promise.resolve(null);
   }
 
-  let usuario = usuarios.find(x => email === x.email && senha === x?.password);
+  const usuario = usuarios.find(x => email === x.email && senha === x?.password);
 
   if (usuario) {
     return Promise.resolve({ id: usuario.id, name: usuario.name, email: usuario.email, role: usuario.role });
@@ -21,7 +21,7 @@ export async function getUser(email: string): Promise<User | null> {
     return Promise.resolve(null);
   }
 
-  let usuario = usuarios.find(x => email === x.email);
+  const usuario = usuarios.find(x => email === x.email);
 
   if (usuario) {
     return Promise.resolve({ id: usuario.id, name: usuario.name, email: usuario.email, role: usuario.role });
@@ -38,7 +38,7 @@ export async function userAdd(name: string, email: string, role: string) : Promi
   return Promise.resolve({ id: usuario.id, name: usuario.name, email: usuario.email, role: usuario.role });
 }
 
-let usuarios = [
+const usuarios = [
   { id: "1", name: "Usuário Admin", password: '123456', email: "admin@email.com", role: "admin" },
   { id: "2", name: "Usuário Teste", password: '123456', email: "teste@email.com", role: "user" },
 ]
